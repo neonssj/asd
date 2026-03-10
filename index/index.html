@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON — Pro Player · Leviatán VCT</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:       #080A0F;
+  --bg2:      #0D1018;
+  --bg3:      #111420;
+  --card:     #0F1219;
+  --border:   rgba(255,255,255,0.06);
+  --border2:  rgba(255,255,255,0.1);
+  --red:      #E8192C;
+  --red-dim:  rgba(232,25,44,0.12);
+  --red-glow: rgba(232,25,44,0.25);
+  --white:    #F0F2F8;
+  --muted:    #5A6070;
+  --muted2:   #8890A0;
+  --mono:     'Share Tech Mono', monospace;
+  --cond:     'Barlow Condensed', sans-serif;
+  --body:     'Barlow', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+
+
+/* ── SCANLINE OVERLAY ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9990;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(8,10,15,0.95), transparent);
+  backdrop-filter: blur(12px);
+}
+.nav-logo {
+  font-family: var(--cond);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: var(--white);
+  text-decoration: none;
+}
+.nav-logo span { color: var(--red); }
+.nav-links {
+  display: flex;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--white); }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 60px;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 70% at 75% 50%, rgba(232,25,44,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 40% at 20% 80%, rgba(232,25,44,0.04) 0%, transparent 60%),
+    linear-gradient(135deg, #080A0F 0%, #0D1018 100%);
+}
+
+/* animated diagonal lines */
+.hero-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hero-lines::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: repeating-linear-gradient(
+    65deg,
+    transparent 0px,
+    transparent 60px,
+    rgba(232,25,44,0.03) 60px,
+    rgba(232,25,44,0.03) 61px
+  );
+  animation: lineSlide 20s linear infinite;
+}
+@keyframes lineSlide {
+  from { transform: translateX(0); }
+  to { transform: translateX(122px); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+}
+
+.hero-pre {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.2s forwards;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-pre::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--red);
+}
+
+.hero-name {
+  font-family: var(--cond);
+  font-weight: 900;
+  font-size: clamp(80px, 14vw, 160px);
+  line-height: 0.85;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.35s forwards;
+}
+.hero-name .accent { color: var(--red); }
+
+.hero-fullname {
+  font-family: var(--cond);
+  font-weight: 300;
+  font-size: clamp(18px, 3vw, 28px);
+  letter-spacing: 0.25em;
+  color: var(--muted2);
+  text-transform: uppercase;
+  margin-top: 8px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.5s forwards;
+}
+
+.hero-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 8px 18px;
+  border: 1px solid rgba(0,200,255,0.3);
+  background: rgba(0,200,255,0.08);
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #00C8FF;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.65s forwards;
+}
+.hero-team::before {
+  content: '';
+  display: block;
+  width: 6px; height: 6px;
+  background: #00C8FF;
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.6); }
+}
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 48px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.8s forwards;
+}
+.hero-stat {}
+.hero-stat-val {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--white);
+  line-height: 1;
+}
+.hero-stat-val span { color: var(--red); font-size: 20px; }
+.hero-stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 1.1s forwards;
+}
+.scroll-line {
+  width: 40px;
+  height: 1px;
+  background: var(--muted);
+  position: relative;
+  overflow: hidden;
+}
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  left: -100%;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--red);
+  animation: scrollAnim 2s ease infinite;
+}
+@keyframes scrollAnim {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ── SECTIONS ── */
+section {
+  padding: 100px 60px;
+  position: relative;
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  margin-bottom: 56px;
+}
+.section-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 0.15em;
+}
+.section-title {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 42px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border2);
+}
+
+/* ── SOCIAL LINKS ── */
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.social-card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 28px 24px;
+  text-decoration: none;
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.25s;
+  group: true;
+}
+.social-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.social-card:hover { border-color: rgba(232,25,44,0.25); transform: translateY(-3px); }
+.social-card:hover::before { transform: scaleX(1); }
+
+.social-icon {
+  width: 40px; height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red-dim);
+  border-radius: 2px;
+  font-size: 18px;
+}
+.social-platform {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.social-handle {
+  font-family: var(--cond);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+.social-arrow {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  font-size: 14px;
+  color: var(--muted);
+  transition: color 0.2s, transform 0.2s;
+}
+.social-card:hover .social-arrow { color: var(--red); transform: translate(3px, -3px); }
+
+/* ── SETTINGS ── */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.settings-block {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.settings-block-header {
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.settings-block-icon { font-size: 16px; }
+.settings-block-title {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.settings-rows { padding: 8px 0; }
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row:hover { background: rgba(255,255,255,0.02); }
+.settings-key {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted2);
+  letter-spacing: 0.08em;
+}
+.settings-val {
+  font-family: var(--cond);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+.settings-val.highlight { color: var(--red); }
+
+/* crosshair preview */
+.crosshair-preview {
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.crosshair-visual {
+  width: 80px; height: 80px;
+  background: #1A1F2E;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  border: 1px solid var(--border2);
+}
+/* Tiny white square with black outline - exact match */
+.ch-square-main {
+  width: 5px;
+  height: 5px;
+  background: #FFFFFF;
+  position: absolute;
+  box-shadow:
+    0 0 0 1px #000000;
+}
+
+.crosshair-info {}
+.crosshair-code-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+.crosshair-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--red);
+  background: var(--red-dim);
+  padding: 6px 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(232,25,44,0.2);
+  cursor: pointer;
+  transition: background 0.2s;
+  word-break: break-all;
+}
+.crosshair-code:hover { background: rgba(232,25,44,0.2); }
+
+/* ── SETUP (GEAR) ── */
+.gear-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.gear-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 24px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.25s;
+}
+.gear-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.gear-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.gear-card:hover::after { opacity: 1; }
+.gear-emoji { font-size: 28px; margin-bottom: 14px; }
+.gear-type {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.gear-name {
+  font-family: var(--cond);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  color: var(--white);
+  line-height: 1.3;
+}
+
+/* ── ACHIEVEMENTS ── */
+.ach-list { display: flex; flex-direction: column; gap: 0; }
+.ach-item {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  align-items: center;
+  gap: 28px;
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  position: relative;
+}
+.ach-item:first-child { border-top: 1px solid var(--border); }
+.ach-item:hover { background: rgba(255,255,255,0.015); }
+.ach-item.gold::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: #F0C040;
+}
+.ach-item.silver::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: #A0A8B8;
+}
+.ach-item.bronze::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: #C06820;
+}
+.ach-year {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.ach-event { }
+.ach-event-name {
+  font-family: var(--cond);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  color: var(--white);
+  margin-bottom: 2px;
+}
+.ach-event-team {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+.ach-result {
+  text-align: right;
+}
+.ach-place {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+.gold .ach-place { color: #F0C040; }
+.silver .ach-place { color: #A0A8B8; }
+.bronze .ach-place { color: #C06820; }
+.ach-prize {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 48px 60px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-name {
+  font-family: var(--cond);
+  font-weight: 900;
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  color: var(--white);
+}
+.footer-name span { color: var(--red); }
+.footer-copy {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── DIVIDER ── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  margin: 0 60px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  .hero { padding: 0 24px; }
+  section { padding: 80px 24px; }
+  .social-grid { grid-template-columns: 1fr 1fr; }
+  .settings-layout { grid-template-columns: 1fr; }
+  .gear-grid { grid-template-columns: repeat(2, 1fr); }
+  .ach-item { grid-template-columns: 80px 1fr; }
+  .ach-result { display: none; }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+  .section-divider { margin: 0 24px; }
+}
+
+/* Toast for copy */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  border: 1px solid rgba(232,25,44,0.3);
+  color: var(--white);
+  padding: 12px 24px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 9999;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">✓ Copiado al portapapeles</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">NEO<span style="color:#00C8FF;">N</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">Sobre Mí</a></li>
+    <li><a href="#social">Links</a></li>
+    <li><a href="#settings">Config</a></li>
+    <li><a href="#setup">Setup</a></li>
+    <li><a href="#logros">Logros</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-content">
+    <div class="hero-pre">Pro Player · Valorant</div>
+    <div class="hero-name">NEO<span style="color:#00C8FF;">N</span></div>
+    <div class="hero-fullname">Bruno Rodríguez</div>
+    <div class="hero-team">🔵 &nbsp;LEVIATÁN · VCT AMERICAS 2026</div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">RADIANT<span>★</span></div>
+        <div class="hero-stat-label">Ranked Valorant</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">ARG</div>
+        <div class="hero-stat-label">Mendoza, Argentina</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">$15<span>K+</span></div>
+        <div class="hero-stat-label">Prize Money</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    SCROLL
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SOBRE MI -->
+<section id="about">
+  <div class="section-header reveal">
+    <span class="section-num">00</span>
+    <h2 class="section-title">Sobre Mí</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
+
+    <div class="reveal">
+      <p style="font-size:15px; color:#8890A0; line-height:1.85; margin-bottom:20px;">
+        Soy <strong style="color:#F0F2F8;">Bruno "Neon" Rodríguez</strong>, jugador profesional de Valorant nacido el
+        <strong style="color:#F0F2F8;">28 de enero de 2008</strong> en <strong style="color:#F0F2F8;">Mendoza, Argentina</strong>. Con 18 años, soy uno de los
+        pro players más jóvenes en competir en el <strong style="color:#F0F2F8;">VCT Americas</strong> —
+        el tier 1 de Valorant en América.
+      </p>
+      <p style="font-size:15px; color:#8890A0; line-height:1.85; margin-bottom:20px;">
+        Mi historia arranca en <strong style="color:#F0F2F8;">junio de 2022</strong> cuando me uní a
+        <strong style="color:#F0F2F8;">Leviatán Academy</strong> con tan solo 14 años, compartiendo equipo con
+        <strong style="color:#F0F2F8;">erde</strong>, <strong style="color:#F0F2F8;">MiradaNinja</strong>,
+        <strong style="color:#F0F2F8;">Mikey Tap</strong> y <strong style="color:#F0F2F8;">skyppervz</strong>.
+        Ese grupo fue la base de todo — años de entrenar juntos, crecer juntos y construir una identidad de equipo
+        que después daría sus frutos.
+      </p>
+      <p style="font-size:15px; color:#8890A0; line-height:1.85; margin-bottom:20px;">
+        Con el tiempo el roster fue evolucionando y se incorporaron nuevas piezas como
+        <strong style="color:#F0F2F8;">blowz</strong> y <strong style="color:#F0F2F8;">ghoul33</strong>,
+        armando el equipo que terminaría dominando la escena LATAM en 2025.
+      </p>
+      <p style="font-size:15px; color:#8890A0; line-height:1.85; margin-bottom:20px;">
+        El 2025 fue el año de la consagración: ganamos los <strong style="color:#F0F2F8;">dos stages de la VCL Latin America South</strong>
+        y en noviembre representamos a Latinoamérica en el
+        <strong style="color:#F0F2F8;">China Esports Festival Super Champions Cup</strong>, donde nos coronamos
+        campeones internacionales. Ese torneo fue la demostración de que el trabajo de años en la Academy valía la pena.
+      </p>
+      <p style="font-size:15px; color:#8890A0; line-height:1.85;">
+        A fines de 2025, <strong style="color:#F0F2F8;">blowz</strong> y yo recibimos la promoción al
+        roster principal de <strong style="color:#E8192C;">Leviatán VCT Americas</strong> para la temporada 2026.
+        El camino desde los 14 años en la Academy hasta el tier 1 fue largo — y esto es solo el comienzo.
+      </p>
+    </div>
+
+    <div class="reveal" style="display:flex; flex-direction:column; gap:12px;">
+
+      <div style="background:#0F1219; border:1px solid rgba(255,255,255,0.06); border-radius:3px; padding:22px 24px; border-left: 2px solid #E8192C;">
+        <div style="font-family:'Share Tech Mono',monospace; font-size:10px; color:#5A6070; letter-spacing:0.15em; margin-bottom:6px;">INICIO DE CARRERA</div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; color:#F0F2F8;">Junio 2022</div>
+        <div style="font-size:13px; color:#8890A0; margin-top:4px;">Leviatán Academy · 14 años</div>
+      </div>
+
+      <div style="background:#0F1219; border:1px solid rgba(255,255,255,0.06); border-radius:3px; padding:22px 24px; border-left: 2px solid #E8192C;">
+        <div style="font-family:'Share Tech Mono',monospace; font-size:10px; color:#5A6070; letter-spacing:0.15em; margin-bottom:6px;">AGENTES PRINCIPALES</div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; color:#F0F2F8;">Yoru · Chamber</div>
+        <div style="font-size:13px; color:#8890A0; margin-top:4px;">Duelist / Sentinel · Rating 1.19 en Yoru (VCT)</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SOCIAL -->
+<section id="social">
+  <div class="section-header reveal">
+    <span class="section-num">01</span>
+    <h2 class="section-title">Links & Redes</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="social-grid reveal">
+    <a href="https://twitter.com/neonnnval" target="_blank" class="social-card">
+      <div class="social-arrow">↗</div>
+      <div class="social-icon">𝕏</div>
+      <div>
+        <div class="social-platform">Twitter / X</div>
+        <div class="social-handle">@neonnnval</div>
+      </div>
+    </a>
+    <a href="https://www.twitch.tv/neonnvlr" target="_blank" class="social-card">
+      <div class="social-arrow">↗</div>
+      <div class="social-icon">🎮</div>
+      <div>
+        <div class="social-platform">Twitch</div>
+        <div class="social-handle">neonnvlr</div>
+      </div>
+    </a>
+    <a href="https://www.instagram.com/neonnssj/" target="_blank" class="social-card">
+      <div class="social-arrow">↗</div>
+      <div class="social-icon">📸</div>
+      <div>
+        <div class="social-platform">Instagram</div>
+        <div class="social-handle">@neonnssj</div>
+      </div>
+    </a>
+    <a href="https://www.tiktok.com/@neonnnval" target="_blank" class="social-card">
+      <div class="social-arrow">↗</div>
+      <div class="social-icon">🎵</div>
+      <div>
+        <div class="social-platform">TikTok</div>
+        <div class="social-handle">@neonnnval</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SETTINGS -->
+<section id="settings">
+  <div class="section-header reveal">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Configuración</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="settings-layout">
+    <!-- Mouse settings -->
+    <div class="settings-block reveal">
+      <div class="settings-block-header">
+        <span class="settings-block-icon">🖱️</span>
+        <span class="settings-block-title">Mouse Settings</span>
+      </div>
+      <div class="settings-rows">
+        <div class="settings-row">
+          <span class="settings-key">DPI</span>
+          <span class="settings-val highlight">800</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">SENSITIVITY IN-GAME</span>
+          <span class="settings-val highlight">0.21</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">SCOPED SENSITIVITY</span>
+          <span class="settings-val">Default</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">POLLING RATE</span>
+          <span class="settings-val highlight">4000 Hz</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crosshair -->
+    <div class="settings-block reveal">
+      <div class="settings-block-header">
+        <span class="settings-block-icon">🎯</span>
+        <span class="settings-block-title">Crosshair</span>
+      </div>
+      <div class="crosshair-preview">
+        <div class="crosshair-visual">
+          <div class="ch-square-main"></div>
+        </div>
+        <div class="crosshair-info">
+          <div class="crosshair-code-label">COLOR / ESTILO</div>
+          <div class="settings-row" style="padding:0; border:none; margin-bottom: 12px;">
+            <span class="settings-key" style="font-size:10px;">Color</span>
+            <span class="settings-val" style="font-size:15px; color:#FFFFFF;">Blanco</span>
+          </div>
+          <div class="crosshair-code-label" style="margin-top:8px;">CÓDIGO — CLICK PARA COPIAR</div>
+          <div class="crosshair-code" id="crosshairCode" onclick="copyCrosshair()" title="Click para copiar">
+            0;s;1;P;o;1;d;1;f;0;0b;0;1b;0;S;c;0;s;0.604;o;1
+          </div>
+        </div>
+      </div>
+      <div class="settings-rows">
+        <div class="settings-row">
+          <span class="settings-key">INNER LINES</span>
+          <span class="settings-val">OFF</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">OUTER LINES</span>
+          <span class="settings-val">OFF</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">CENTER DOT</span>
+          <span class="settings-val">ON</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Settings -->
+    <div class="settings-block reveal">
+      <div class="settings-block-header">
+        <span class="settings-block-icon">🖥️</span>
+        <span class="settings-block-title">Video Settings</span>
+      </div>
+      <div class="settings-rows">
+        <div class="settings-row">
+          <span class="settings-key">RESOLUCIÓN</span>
+          <span class="settings-val highlight">1920 × 1080</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">ASPECT RATIO</span>
+          <span class="settings-val">16:9</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">MONITOR HZ</span>
+          <span class="settings-val highlight">400 Hz</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">DISPLAY MODE</span>
+          <span class="settings-val">Fullscreen</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">MATERIAL QUALITY</span>
+          <span class="settings-val">Low</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keybinds -->
+    <div class="settings-block reveal">
+      <div class="settings-block-header">
+        <span class="settings-block-icon">⌨️</span>
+        <span class="settings-block-title">Windows / Extra</span>
+      </div>
+      <div class="settings-rows">
+        <div class="settings-row">
+          <span class="settings-key">WINDOWS SENS</span>
+          <span class="settings-val highlight">6 / 11</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">RAW INPUT BUFFER</span>
+          <span class="settings-val">ON</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">ENHANCED POINTER PREC.</span>
+          <span class="settings-val">OFF</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">AGENTES PRINCIPALES</span>
+          <span class="settings-val" style="text-align:right;">Yoru / Chamber</span>
+        </div>
+        <div class="settings-row">
+          <span class="settings-key">RATING COMPETITIVO</span>
+          <span class="settings-val highlight">1.19 (Yoru)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SETUP / GEAR -->
+<section id="setup">
+  <div class="section-header reveal">
+    <span class="section-num">03</span>
+    <h2 class="section-title">Setup</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="gear-grid">
+    <div class="gear-card reveal">
+      <div class="gear-emoji">🖱️</div>
+      <div class="gear-type">Mouse</div>
+      <div class="gear-name">Razer Viper V3 Pro</div>
+    </div>
+    <div class="gear-card reveal">
+      <div class="gear-emoji">🖥️</div>
+      <div class="gear-type">Monitor</div>
+      <div class="gear-name">BenQ Zowie XL2566K 24.5"</div>
+    </div>
+    <div class="gear-card reveal">
+      <div class="gear-emoji">🎧</div>
+      <div class="gear-type">Headset</div>
+      <div class="gear-name">HyperX Cloud III</div>
+    </div>
+    <div class="gear-card reveal">
+      <div class="gear-emoji">⌨️</div>
+      <div class="gear-type">Teclado</div>
+      <div class="gear-name">Wooting 60HE v2</div>
+    </div>
+    <div class="gear-card reveal">
+      <div class="gear-emoji">🟫</div>
+      <div class="gear-type">Mousepad</div>
+      <div class="gear-name">Artisan FX Zero Soft XL</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- LOGROS -->
+<section id="logros">
+  <div class="section-header reveal">
+    <span class="section-num">04</span>
+    <h2 class="section-title">Logros</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="ach-list reveal">
+    <div class="ach-item gold">
+      <div class="ach-year">2025</div>
+      <div class="ach-event">
+        <div class="ach-event-name">China Esports Festival Super Champions Cup</div>
+        <div class="ach-event-team">LEVIATÁN · Main Event</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">1st 🏆</div>
+        <div class="ach-prize">$5,653</div>
+      </div>
+    </div>
+    <div class="ach-item gold">
+      <div class="ach-year">2025</div>
+      <div class="ach-event">
+        <div class="ach-event-name">Challengers LATAM South ACE — Stage 2</div>
+        <div class="ach-event-team">LEVIATÁN Academy · Playoffs</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">1st 🏆</div>
+        <div class="ach-prize">$3,400</div>
+      </div>
+    </div>
+    <div class="ach-item gold">
+      <div class="ach-year">2025</div>
+      <div class="ach-event">
+        <div class="ach-event-name">Challengers LATAM South ACE — Stage 1</div>
+        <div class="ach-event-team">LEVIATÁN Academy · Playoffs + ACE Masters</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">1st 🏆</div>
+        <div class="ach-prize">$3,300</div>
+      </div>
+    </div>
+    <div class="ach-item gold">
+      <div class="ach-year">2024</div>
+      <div class="ach-event">
+        <div class="ach-event-name">Challengers League LATAM South ACE — Split 3</div>
+        <div class="ach-event-team">Furious Gaming · Playoffs</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">1st 🏆</div>
+        <div class="ach-prize">$1,400</div>
+      </div>
+    </div>
+    <div class="ach-item gold">
+      <div class="ach-year">2023</div>
+      <div class="ach-event">
+        <div class="ach-event-name">Valorant National League 2023-1</div>
+        <div class="ach-event-team">LEVIATÁN Academy · Playoffs</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">1st 🏆</div>
+        <div class="ach-prize">$206</div>
+      </div>
+    </div>
+    <div class="ach-item silver">
+      <div class="ach-year">2025</div>
+      <div class="ach-event">
+        <div class="ach-event-name">ACE Masters — Stage 2</div>
+        <div class="ach-event-team">LEVIATÁN Academy</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">2nd</div>
+        <div class="ach-prize">$200</div>
+      </div>
+    </div>
+    <div class="ach-item bronze">
+      <div class="ach-year">2026</div>
+      <div class="ach-event">
+        <div class="ach-event-name">VCT 2026: Americas Kickoff</div>
+        <div class="ach-event-team">LEVIATÁN · Main Event</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">7th–8th</div>
+        <div class="ach-prize">VCT Tier 1</div>
+      </div>
+    </div>
+    <div class="ach-item bronze">
+      <div class="ach-year">2024</div>
+      <div class="ach-event">
+        <div class="ach-event-name">Challengers League LATAM South ACE — Split 1</div>
+        <div class="ach-event-team">Furious Gaming · Zone Playoffs</div>
+      </div>
+      <div class="ach-result">
+        <div class="ach-place">3rd</div>
+        <div class="ach-prize">$800</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-name">NEO<span style="color:#00C8FF;">N</span></div>
+  <div class="footer-copy">Bruno Rodríguez · Leviatán VCT Americas · Argentina · 2026</div>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+
+// Copy crosshair
+function copyCrosshair() {
+  const code = document.getElementById('crosshairCode').textContent.trim();
+  navigator.clipboard.writeText(code).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  });
+}
+</script>
+</body>
+</html>
